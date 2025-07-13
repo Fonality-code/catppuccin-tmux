@@ -73,6 +73,7 @@ main() {
   left_separator="$(get_tmux_option "@catppuccin_left_separator" "")"
   readonly left_separator
 
+  # Disable all other options by default
   local user
   user="$(get_tmux_option "@catppuccin_user" "off")"
   readonly user
@@ -89,73 +90,34 @@ main() {
   network="$(get_tmux_option "@catppuccin_network" "off")"
   readonly network
 
-  # These variables are the defaults so that the setw and set calls are easier to parse.
+  # Keep only directory and window
   local show_directory
-  readonly show_directory="#[fg=$thm_pink,bg=$thm_bg,nobold,nounderscore,noitalics]$right_separator#[fg=$thm_bg,bg=$thm_pink,nobold,nounderscore,noitalics] #[fg=$thm_fg,bg=$thm_gray] #{b:pane_current_path} #{?client_prefix,#[fg=$thm_red]"
+  readonly show_directory="#[fg=$thm_pink,bg=$thm_bg,nobold,nounderscore,noitalics]$right_separator#[fg=$thm_bg,bg=$thm_pink,nobold,nounderscore,noitalics] #[fg=$thm_fg,bg=$thm_gray] #{b:pane_current_path} "
 
   local show_window
-  readonly show_window="#[fg=$thm_pink,bg=$thm_bg,nobold,nounderscore,noitalics]$right_separator#[fg=$thm_bg,bg=$thm_pink,nobold,nounderscore,noitalics] #[fg=$thm_fg,bg=$thm_gray] #W #{?client_prefix,#[fg=$thm_red]"
+  readonly show_window="#[fg=$thm_pink,bg=$thm_bg,nobold,nounderscore,noitalics]$right_separator#[fg=$thm_bg,bg=$thm_pink,nobold,nounderscore,noitalics] #[fg=$thm_fg,bg=$thm_gray] #W "
 
-  local show_session
-  readonly show_session="#[fg=$thm_green,bg=$thm_gray]$right_separator#{?client_prefix,#[bg=$thm_red],#[bg=$thm_green]}#[fg=$thm_bg] #[fg=$thm_fg,bg=$thm_gray] #S "
+  # Remove other show_* variables (e.g., show_session, show_user, etc.) since they're not needed
 
-  local show_directory_in_window_status
-  readonly show_directory_in_window_status="#[fg=$thm_bg,bg=$thm_blue] #I #[fg=$thm_fg,bg=$thm_gray] #W "
-
-  local show_directory_in_window_status_current
-  readonly show_directory_in_window_status_current="#[fg=colour232,bg=$thm_orange] #I #[fg=colour255,bg=colour237] #(echo '#{pane_current_path}' | rev | cut -d'/' -f-2 | rev) "
-
-  local show_window_in_window_status
-  readonly show_window_in_window_status="#[fg=$thm_fg,bg=$thm_bg] #W #[fg=$thm_bg,bg=$thm_blue] #I#[fg=$thm_blue,bg=$thm_bg]$left_separator#[fg=$thm_fg,bg=$thm_bg,nobold,nounderscore,noitalics] "
-
-  local show_window_in_window_status_current
-  readonly show_window_in_window_status_current="#[fg=$thm_fg,bg=$thm_gray] #W #[fg=$thm_bg,bg=$thm_orange] #I#[fg=$thm_orange,bg=$thm_bg]$left_separator#[fg=$thm_fg,bg=$thm_bg,nobold,nounderscore,noitalics] "
-
-  local show_user
-  readonly show_user="#[fg=$thm_blue,bg=$thm_gray]$right_separator#[fg=$thm_bg,bg=$thm_blue] #[fg=$thm_fg,bg=$thm_gray] #(whoami) "
-
-  local show_host
-  readonly show_host="#[fg=$thm_blue,bg=$thm_gray]$right_separator#[fg=$thm_bg,bg=$thm_blue]󰒋 #[fg=$thm_fg,bg=$thm_gray] #H "
-
-  local show_date_time
-  readonly show_date_time="#[fg=$thm_blue,bg=$thm_gray]$right_separator#[fg=$thm_bg,bg=$thm_blue] #[fg=$thm_fg,bg=$thm_gray] $date_time "
-
-  local show_network
-  readonly show_network="#[fg=$thm_blue,bg=$thm_gray]$right_separator#[fg=$thm_bg,bg=$thm_blue]󰖩 #[fg=$thm_fg,bg=$thm_gray] #(~/network-status.sh) "
-
-  # Right column 1 by default shows the Window name.
+  # Right column 1 shows the Window name
   local right_column1=$show_window
 
-  # Right column 2 by default shows the current Session name.
-  local right_column2=$show_session
+  # Right column 2 shows the Directory path
+  local right_column2=$show_directory
 
-  # Window status by default shows the current directory basename.
-  local window_status_format=$show_directory_in_window_status
-  local window_status_current_format=$show_directory_in_window_status_current
+  # Window status shows the window name
+  local window_status_format="#[fg=$thm_bg,bg=$thm_blue] #I #[fg=$thm_fg,bg=$thm_gray] #W "
+  local window_status_current_format="#[fg=colour232,bg=$thm_orange] #I #[fg=colour255,bg=colour237] #W "
 
-  # NOTE: With the @catppuccin_window_tabs_enabled set to on, we're going to
-  # update the right_column1 and the window_status_* variables.
+  # Disable window tabs logic since only window and directory are needed
   if [[ "${wt_enabled}" == "on" ]]; then
-    right_column1=$show_directory
-    window_status_format=$show_window_in_window_status
-    window_status_current_format=$show_window_in_window_status_current
+    # No change needed as we’re keeping directory in right_column2
+    window_status_format="#[fg=$thm_bg,bg=$thm_blue] #I #[fg=$thm_fg,bg=$thm_gray] #W "
+    window_status_current_format="#[fg=colour232,bg=$thm_orange] #I #[fg=colour255,bg=colour237] #W "
   fi
 
-  if [[ "${user}" == "on" ]]; then
-    right_column2=$right_column2$show_user
-  fi
-
-  if [[ "${host}" == "on" ]]; then
-    right_column2=$right_column2$show_host
-  fi
-
-  if [[ "${date_time}" != "off" ]]; then
-    right_column2=$right_column2$show_date_time
-  fi
-
-  if [[ "${network}" == "on" ]]; then
-    right_column2=$right_column2$show_network
-  fi
+  # Disable all other conditionals
+  # (user, host, date_time, network are off by default, so no action needed)
 
   set status-left ""
 
